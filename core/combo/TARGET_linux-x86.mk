@@ -103,11 +103,6 @@ TARGET_GLOBAL_CFLAGS += \
 			-funwind-tables \
 			-fstack-protector
 
-# option to enable pipe
-ifeq ($(TARGET_USE_PIPE),true)
-    TARGET_GLOBAL_CFLAGS += -pipe
-endif
-
 android_config_h := $(call select-android-config-h,target_linux-x86)
 TARGET_ANDROID_CONFIG_CFLAGS := -include $(android_config_h) -I $(dir $(android_config_h))
 TARGET_GLOBAL_CFLAGS += $(TARGET_ANDROID_CONFIG_CFLAGS)
