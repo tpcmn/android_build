@@ -71,6 +71,7 @@ PRODUCT_PACKAGES += \
     requestsync \
     telephony-common \
     telephony-msim \
+    framework-pac \
     voip-common
 
 # host-only dependencies
