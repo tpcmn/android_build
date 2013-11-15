@@ -19,8 +19,8 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - cmremote: Add git remote for CM Gerrit Review.
 - cmgerrit: A Git wrapper that fetches/pushes patch from/to CM Gerrit Review.
 - cmrebase: Rebase a Gerrit change and push it again.
-- aosp:     Add git remote for matching AOSP repository.
-- caf:      Add git remote for matching CodeAurora repository.
+- aospremote: Add git remote for matching AOSP repository.
+- cafremote: Add git remote for matching CodeAurora repository.
 - mka:      Builds using SCHED_BATCH on all processors.
 - mkap:     Builds the module(s) using mka and pushes them to the device.
 - cmka:     Cleans and builds using mka.
@@ -88,11 +88,6 @@ function check_product()
         TARGET_BUILD_APPS= \
         get_build_var TARGET_DEVICE > /dev/null
     # hide successful answers, but allow the errors to show
-
-    if [ "$TARGET_BUILD_VARIANT" = "user" -a -n "$RELEASE_BUILD_ID" ]
-    then
-        export BUILD_NUMBER=$RELEASE_BUILD_ID
-    fi
 }
 
 VARIANT_CHOICES=(user userdebug eng)
@@ -1417,97 +1412,35 @@ function cmremote()
     then
         echo .git directory not found. Please run this from the root directory of the Android repository you wish to set up.
     fi
-    GERRIT_REMOTE=$(cat .git/config | grep git://github.com/androidarmv6 | awk '{ print $NF }' | sed s#git://github.com/##g)
+    GERRIT_REMOTE=$(cat .git/config  | grep git://github.com | awk '{ print $NF }' | sed s#git://github.com/##g)
     if [ -z "$GERRIT_REMOTE" ]
     then
-        GERRIT_REMOTE=$(cat .git/config | grep http://github.com/androidarmv6 | awk '{ print $NF }' | sed s#http://github.com/##g)
+        GERRIT_REMOTE=$(cat .git/config  | grep http://github.com | awk '{ print $NF }' | sed s#http://github.com/##g)
         if [ -z "$GERRIT_REMOTE" ]
         then
           echo Unable to set up the git remote, are you in the root of the repo?
           return 0
         fi
     fi
-    CMUSER=`git config --get review.review.androidarmv6.org.username`
+    CMUSER=`git config --get review.review.cyanogenmod.org.username`
     if [ -z "$CMUSER" ]
     then
-        git remote add cmremote ssh://review.androidarmv6.org:29418/$GERRIT_REMOTE
+        git remote add cmremote ssh://review.cyanogenmod.org:29418/$GERRIT_REMOTE
     else
-        git remote add cmremote ssh://$CMUSER@review.androidarmv6.org:29418/$GERRIT_REMOTE
+        git remote add cmremote ssh://$CMUSER@review.cyanogenmod.org:29418/$GERRIT_REMOTE
     fi
     echo You can now push to "cmremote".
 }
 export -f cmremote
 
-function upstream()
-{
-    git remote rm upstream 2> /dev/null
-    if [ ! -d .git ]
-    then
-        echo .git directory not found. Please run this from the root directory of the Android repository you wish to set up.
-    fi
-    GERRIT_REMOTE=$(cat .git/config | grep git://github.com/androidarmv6 | awk '{ print $NF }' | sed s#git://github.com/##g)
-    if [ -z "$GERRIT_REMOTE" ]
-    then
-        GERRIT_REMOTE=$(cat .git/config | grep http://github.com/androidarmv6 | awk '{ print $NF }' | sed s#http://github.com/##g)
-        if [ -z "$GERRIT_REMOTE" ]
-        then
-          echo Unable to set up the git remote, are you in the root of the repo?
-          return 0
-        fi
-    fi
-    GERRIT_REMOTE=$(echo $GERRIT_REMOTE | grep androidarmv6 | awk '{ print $NF }' | sed s#androidarmv6#CyanogenMod#g)
-    git remote add upstream git://github.com/$GERRIT_REMOTE.git
-    echo You can now fetch from "upstream".
-}
-export -f upstream
-
-function githubssh()
-{
-    git remote rm githubssh 2> /dev/null
-    if [ ! -d .git ]
-    then
-        echo .git directory not found. Please run this from the root directory of the Android repository you wish to set up.
-    fi
-    GERRIT_REMOTE=$(cat .git/config | grep git://github.com/androidarmv6 | awk '{ print $NF }' | sed s#git://github.com/##g)
-    if [ -z "$GERRIT_REMOTE" ]
-    then
-        GERRIT_REMOTE=$(cat .git/config | grep http://github.com/androidarmv6 | awk '{ print $NF }' | sed s#http://github.com/##g)
-        if [ -z "$GERRIT_REMOTE" ]
-        then
-          echo Unable to set up the git remote, are you in the root of the repo?
-          return 0
-        fi
-    fi
-    git remote add githubssh git@github.com:$GERRIT_REMOTE.git
-    echo You can now push to "githubssh".
-}
-export -f githubssh
-
-function caf()
-{
-    git remote rm caf 2> /dev/null
-    if [ ! -d .git ]
-    then
-        echo .git directory not found. Please run this from the root directory of the Android repository you wish to set up.
-    fi
-    PROJECT=`pwd -P | sed s#$ANDROID_BUILD_TOP/##g`
-    if (echo $PROJECT | grep -qv "^device")
-    then
-        PFX="platform/"
-    fi
-    git remote add caf git://codeaurora.org/$PFX$PROJECT.git
-    echo "Remote 'caf' created"
-}
-export -f caf
-
-function aosp()
+function aospremote()
 {
     git remote rm aosp 2> /dev/null
     if [ ! -d .git ]
     then
         echo .git directory not found. Please run this from the root directory of the Android repository you wish to set up.
     fi
-    PROJECT=`pwd -P | sed s#$ANDROID_BUILD_TOP/##g`
+    PROJECT=`pwd | sed s#$ANDROID_BUILD_TOP/##g`
     if (echo $PROJECT | grep -qv "^device")
     then
         PFX="platform/"
@@ -1515,184 +1448,24 @@ function aosp()
     git remote add aosp https://android.googlesource.com/$PFX$PROJECT
     echo "Remote 'aosp' created"
 }
-export -f aosp
+export -f aospremote
 
-function updatenotes() {
+function cafremote()
+{
+    git remote rm caf 2> /dev/null
     if [ ! -d .git ]
     then
         echo .git directory not found. Please run this from the root directory of the Android repository you wish to set up.
     fi
-    GERRIT_REMOTE=$(cat .git/config | grep git://github.com/androidarmv6 | awk '{ print $NF }' | sed s#git://github.com/##g)
-    if [ -z "$GERRIT_REMOTE" ]
+    PROJECT=`pwd | sed s#$ANDROID_BUILD_TOP/##g`
+    if (echo $PROJECT | grep -qv "^device")
     then
-        GERRIT_REMOTE=$(cat .git/config | grep http://github.com/androidarmv6 | awk '{ print $NF }' | sed s#http://github.com/##g)
-        if [ -z "$GERRIT_REMOTE" ]
-        then
-          return 0
-        fi
+        PFX="platform/"
     fi
-    pwd
-    cmremote
-    githubssh
-    git fetch cmremote refs/notes/review:refs/notes/review
-    git push githubssh refs/notes/review:refs/notes/review
-    echo "All notes were updated."
+    git remote add caf git://codeaurora.org/$PFX$PROJECT
+    echo "Remote 'caf' created"
 }
-export -f updatenotes
-
-function updateallnotes() {
-  repo forall -c '
-  if [ "$REPO_REMOTE" == "github" ]
-  then
-    updatenotes
-  fi
-  '
-}
-export -f updateallnotes
-
-# Examples:
-# mergeupstream
-# mergeupstream caf jb_2.5
-# mergeupstream aosp android-4.2.2_r1.2
-function mergeupstream() {
-    if [ ! -d .git ]
-    then
-        echo .git directory not found. Please run this from the root directory of the Android repository you wish to set up.
-    fi
-    GERRIT_REMOTE=$(cat .git/config | grep git://github.com/androidarmv6 | awk '{ print $NF }' | sed s#git://github.com/##g)
-    if [ -z "$GERRIT_REMOTE" ]
-    then
-        GERRIT_REMOTE=$(cat .git/config | grep http://github.com/androidarmv6 | awk '{ print $NF }' | sed s#http://github.com/##g)
-        if [ -z "$GERRIT_REMOTE" ]
-        then
-          return 0
-        fi
-    fi
-
-    UPSTREAM="upstream"
-    R_BRANCH="cm-10.2"
-    if [ ! -z "$1" ]
-    then
-        UPSTREAM=$1
-        $UPSTREAM
-    else
-        upstream
-    fi
-
-    if [ ! -z "$2" ]
-    then
-        R_BRANCH=$2
-    fi
-
-    pwd
-    #skip github
-    #githubssh
-    cmremote
-    repo sync . 2> /dev/null
-    git reset --hard 2> /dev/null
-    git clean -fd 2> /dev/null
-    repo sync . 2> /dev/null
-    git remote update 2> /dev/null
-    repo sync . 2> /dev/null
-    repo abandon cm-10.2 . 2> /dev/null
-    repo start cm-10.2 . 2> /dev/null
-    git merge $UPSTREAM/$R_BRANCH
-    git push cmremote cm-10.2
-    # git push cmremote(gerrit) updates github, no need manually update
-    # git push githubssh cm-10.2
-    echo "Upstream ($UPSTREAM/$R_BRANCH) changes have been merged."
-}
-export -f mergeupstream
-
-function mergeupstreamall() {
-  repo forall -c '
-  if [ "$REPO_REMOTE" == "github" ]
-  then
-    mergeupstream
-  fi
-  '
-}
-export -f mergeupstreamall
-
-# tag cm-10.2-20130501
-function tag() {
-    if [ ! -d .git ]
-    then
-        echo .git directory not found. Please run this from the root directory of the Android repository you wish to set up.
-    fi
-    GERRIT_REMOTE=$(cat .git/config | grep git://github.com/androidarmv6 | awk '{ print $NF }' | sed s#git://github.com/##g)
-    if [ -z "$GERRIT_REMOTE" ]
-    then
-        GERRIT_REMOTE=$(cat .git/config | grep http://github.com/androidarmv6 | awk '{ print $NF }' | sed s#http://github.com/##g)
-        if [ -z "$GERRIT_REMOTE" ]
-        then
-          return 0
-        fi
-    fi
-    if [ -z "$1" ]
-    then
-      echo Tag must be specified.
-      return 0
-    fi
-    R_TAG=$1
-    cmremote
-    git tag -d $R_TAG
-    git tag -a $R_TAG -m "$R_TAG"
-    git push -f cmremote $R_TAG
-    echo "Tagged: $R_TAG"
-}
-export -f tag
-
-# tagall cm-10.2-RC2 cm-10.2
-function tagall() {
-    if [ ! -d android ]
-    then
-      echo android directory not found.
-      return 0
-    fi
-    if [ -z "$1" ]
-    then
-      echo Tag must be specified...
-      return 0
-    fi
-    if [ -z "$2" ]
-    then
-      echo Branch must be specified...
-      return 0
-    fi
-    export R_TAG=$1
-    R_BRANCH=$2
-    # Remove local manifests to build the core manifest
-    rm -fr .repo/local_manifests
-    repo sync -j4
-    cd android
-    cmremote
-    git remote update
-    repo abandon $R_BRANCH .
-    repo start $R_BRANCH .
-    cd ../
-    # Create tags without android folder
-    repo forall -c '
-    if [[ "$REPO_REMOTE" == "github" && "$REPO_PATH" != "android" ]]
-    then
-      tag $R_TAG
-    fi
-    '
-    # Create manifest
-    repo manifest -o android/manifests/$R_TAG.xml -r
-    cd android
-    git add manifests/$R_TAG.xml
-    git commit -m "manifests/$R_TAG.xml"
-    git push cmremote $R_BRANCH
-    sleep 5
-    git tag -a $R_TAG -m "$R_TAG"
-    git push -f cmremote $R_TAG
-    cd ../
-    sleep 20
-    repo sync -j4
-    echo "MANIFEST: android/manifests/$R_TAG.xml"
-}
-export -f tagall
+export -f cafremote
 
 
 function installboot()
@@ -1820,7 +1593,7 @@ function cmgerrit() {
         $FUNCNAME help
         return 1
     fi
-    local user=`git config --get review.review.androidarmv6.org.username`
+    local user=`git config --get review.review.cyanogenmod.org.username`
     local review=`git config --get remote.github.review`
     local project=`git config --get remote.github.projectname`
     local command=$1
@@ -2077,7 +1850,7 @@ function cmrebase() {
     echo "Bringing it up to date..."
     repo sync .
     echo "Fetching change..."
-    git fetch "http://review.androidarmv6.org/$repo" "refs/changes/$refs" && git cherry-pick FETCH_HEAD
+    git fetch "http://review.cyanogenmod.org/p/$repo" "refs/changes/$refs" && git cherry-pick FETCH_HEAD
     if [ "$?" != "0" ]; then
         echo "Error cherry-picking. Not uploading!"
         return
