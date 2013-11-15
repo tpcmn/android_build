@@ -30,9 +30,8 @@ PRODUCT_PACKAGES := \
     Gallery2 \
     InputDevices \
     LatinIME \
-    Launcher2 \
     Music \
-    OneTimeInitializer \
+    Provision \
     Phone \
     QuickSearchBox \
     Settings \
@@ -42,14 +41,8 @@ PRODUCT_PACKAGES := \
     hostapd \
     wpa_supplicant.conf
 
-ifneq ($(MINI_GAPPS),true)
-PRODUCT_PACKAGES += Provision
-endif
-
 PRODUCT_PACKAGES += \
     audio \
-    clatd \
-    clatd.conf \
     dhcpcd.conf \
     network \
     pand \
@@ -64,28 +57,33 @@ PRODUCT_PACKAGES += \
     librs_jni
 
 PRODUCT_PACKAGES += \
-    audio.primary.default \
-    audio_policy.default \
     local_time.default \
     power.default
 
 PRODUCT_PACKAGES += \
     local_time.default
 
+# Telephony
+PRODUCT_PACKAGES += \
+    Mms \
+    rild
+
 PRODUCT_COPY_FILES := \
-        frameworks/av/media/libeffects/data/audio_effects.conf:system/etc/audio_effects.conf
+    frameworks/av/media/libeffects/data/audio_effects.conf:system/etc/audio_effects.conf
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.carrier=unknown
 
 $(call inherit-product-if-exists, frameworks/base/data/fonts/fonts.mk)
-$(call inherit-product-if-exists, external/noto-fonts/fonts.mk)
+$(call inherit-product-if-exists, external/cibu-fonts/fonts.mk)
+$(call inherit-product-if-exists, external/lohit-fonts/fonts.mk)
 $(call inherit-product-if-exists, external/naver-fonts/fonts.mk)
 $(call inherit-product-if-exists, frameworks/base/data/keyboards/keyboards.mk)
-$(call inherit-product-if-exists, frameworks/webview/chromium/chromium.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core.mk)
+
+$(call inherit-product, $(SRC_TARGET_DIR)/product/locales_full.mk)
 
 # Overrides
 PRODUCT_BRAND := generic
 PRODUCT_DEVICE := generic
-PRODUCT_NAME := generic_no_telephony
+PRODUCT_NAME := generic
