@@ -26,6 +26,8 @@ PRODUCT_PACKAGES := \
     Calendar \
     CertInstaller \
     DrmProvider \
+    Email \
+    Exchange2 \
     FusedLocation \
     Gallery2 \
     InputDevices \

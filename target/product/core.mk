@@ -70,9 +70,9 @@ PRODUCT_PACKAGES += \
     mms-common \
     requestsync \
     telephony-common \
-    telephony-msim \
+    voip-common \
     framework-pac \
-    voip-common
+    telephony-msim
 
 # host-only dependencies
 ifeq ($(WITH_HOST_DALVIK),true)

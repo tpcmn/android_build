@@ -195,7 +195,6 @@ def RewriteProps(data):
         pieces[-1] = EditTags(pieces[-1])
         value = " ".join(pieces)
       elif key == "ro.build.tags":
-      if key == "ro.build.tags":
         value = EditTags(value)
       line = key + "=" + value
     if line != original_line:
